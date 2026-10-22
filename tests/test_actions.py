@@ -261,6 +261,23 @@ class TestArgparseActions(TestCase):
         with self.assertRaises(SystemExit):
             PositionalWithDefault().parse_args(["hello", "custom"])
 
+    def test_positional_annotated_optional(self):
+        """Positional[str | None] = None is optional without a configure override."""
+
+        class AnnotatedOptional(Tap):
+            arg: Positional[str]
+            tag: Positional[str | None] = None
+
+        # omitting the optional positional falls back to None
+        args = AnnotatedOptional().parse_args(["hello"])
+        self.assertEqual(args.arg, "hello")
+        self.assertIsNone(args.tag)
+
+        # providing both works
+        args = AnnotatedOptional().parse_args(["hello", "beta"])
+        self.assertEqual(args.arg, "hello")
+        self.assertEqual(args.tag, "beta")
+
     def test_positional_optional_before_required(self):
         """An optional positional followed by a required one is ambiguous, so it is rejected."""
 
